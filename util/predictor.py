@@ -1,19 +1,27 @@
+import os
 from typing import Optional
 
 import numpy as np
 import torch
-import yaml
 
 from models.networks import get_generator
 
 
+def load_default_config():
+    import yaml
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    with open(os.path.join(script_dir, '../config/config.yaml')) as cfg:
+        return yaml.safe_load(cfg)
+
+
 class Predictor:
-    def __init__(self, weights_path: str, model_name: str = ''):
-        with open('config/config.yaml') as cfg:
-            config = yaml.load(cfg)
-        model = get_generator(model_name or config['model'])
-        model.load_state_dict(torch.load(weights_path)['model'])
-        self.model = model.cuda()
+    def __init__(self, weights_path: str, model_config: Optional[dict] = None, device='cuda'):
+        self.device = torch.device(device)
+        model = get_generator(model_config or load_default_config()['model'])
+        model.load_state_dict(torch.load(weights_path, map_location=self.device)['model'])
+        # Remove DataParallel for CPU inference support
+        model = model.module
+        self.model = model.to(self.device)
         # GAN inference should be in train mode to use actual stats in norm layers,
         # it's not a bug
         self.model.train(True)
@@ -24,7 +32,7 @@ class Predictor:
         x = np.expand_dims(x, 0)
         return torch.from_numpy(x)
 
-    def _preprocess(self, x: np.ndarray, mask: Optional[np.ndarray]):
+    def _preprocess(self, x: np.ndarray, mask: Optional[np.ndarray]) -> (torch.Tensor, torch.Tensor, int, int):
         x = (x.astype(np.float32) - 127.5) / 127.5
         if mask is None:
             mask = np.ones_like(x, dtype=np.float32)
@@ -43,7 +51,7 @@ class Predictor:
         x = np.pad(x, **pad_params)
         mask = np.pad(mask, **pad_params)
 
-        return map(self._array_to_batch, (x, mask)), h, w
+        return self._array_to_batch(x), self._array_to_batch(mask), h, w
 
     @staticmethod
     def _postprocess(x: torch.Tensor) -> np.ndarray:
@@ -52,11 +60,11 @@ class Predictor:
         x = (np.transpose(x, (1, 2, 0)) + 1) / 2.0 * 255.0
         return x.astype('uint8')
 
+    @torch.no_grad()
     def __call__(self, img: np.ndarray, mask: Optional[np.ndarray], ignore_mask=True) -> np.ndarray:
-        (img, mask), h, w = self._preprocess(img, mask)
-        with torch.no_grad():
-            inputs = [img.cuda()]
-            if not ignore_mask:
-                inputs += [mask]
-            pred = self.model(*inputs)
+        img, mask, h, w = self._preprocess(img, mask)
+        inputs = [img.to(self.device)]
+        if not ignore_mask:
+            inputs += [mask.to(self.device)]
+        pred = self.model(*inputs)
         return self._postprocess(pred)[:h, :w, :]
