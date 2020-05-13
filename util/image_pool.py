@@ -1,11 +1,19 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import random
-import numpy as np
 import torch
-from torch.autograd import Variable
 from collections import deque
 
 
-class ImagePool():
+class ImagePool(object):
     def __init__(self, pool_size):
         self.pool_size = pool_size
         self.sample_size = pool_size

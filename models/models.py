@@ -1,3 +1,12 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
 import numpy as np
 import torch.nn as nn
 from skimage.measure import compare_ssim as SSIM
@@ -21,7 +30,7 @@ class DeblurModel(nn.Module):
         image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0
         return image_numpy.astype(imtype)
 
-    def get_images_and_metrics(self, inp, output, target) -> (float, float, np.ndarray):
+    def get_images_and_metrics(self, inp, output, target):
         inp = self.tensor2im(inp)
         fake = self.tensor2im(output.data)
         real = self.tensor2im(target.data)

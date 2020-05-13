@@ -1,6 +1,14 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
 import os
 from glob import glob
-from typing import Optional
 
 import cv2
 import numpy as np
@@ -11,12 +19,12 @@ from hubconf import DeblurGANv2
 from util.predictor import Predictor, load_model
 
 
-def main(img_pattern: str,
-         mask_pattern: Optional[str] = None,
+def main(img_pattern,
+         mask_pattern = None,
          pretrained_model=None,
          weights_path='best_fpn.h5',
          out_dir='submit/',
-         side_by_side: bool = False,
+         side_by_side = False,
          device='cuda'):
     def sorted_glob(pattern):
         return sorted(glob(pattern))
@@ -31,7 +39,8 @@ def main(img_pattern: str,
         model = load_model(weights_path, map_location=device)
     predictor = Predictor(model, device=device)
 
-    os.makedirs(out_dir, exist_ok=True)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
     for name, pair in tqdm(zip(names, pairs), total=len(names)):
         f_img, f_mask = pair
         img, mask = map(cv2.imread, (f_img, f_mask))

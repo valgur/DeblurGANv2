@@ -1,3 +1,13 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import logging
 from collections import defaultdict
 
@@ -7,7 +17,7 @@ from tensorboardX import SummaryWriter
 WINDOW_SIZE = 100
 
 
-class MetricCounter:
+class MetricCounter(object):
     def __init__(self, exp_name):
         self.writer = SummaryWriter(exp_name)
         logging.basicConfig(filename='{}.log'.format(exp_name), level=logging.DEBUG)
@@ -15,7 +25,7 @@ class MetricCounter:
         self.images = defaultdict(list)
         self.best_metric = 0
 
-    def add_image(self, x: np.ndarray, tag: str):
+    def add_image(self, x, tag):
         self.images[tag].append(x)
 
     def clear(self):
@@ -34,12 +44,12 @@ class MetricCounter:
 
     def loss_message(self):
         metrics = ((k, np.mean(self.metrics[k][-WINDOW_SIZE:])) for k in ('G_loss', 'PSNR', 'SSIM'))
-        return '; '.join(map(lambda x: f'{x[0]}={x[1]:.4f}', metrics))
+        return '; '.join(map(lambda x: '{x[0]}={x[1]:.4f}'.format(**locals()), metrics))
 
     def write_to_tensorboard(self, epoch_num, validation=False):
         scalar_prefix = 'Validation' if validation else 'Train'
         for tag in ('G_loss', 'D_loss', 'G_loss_adv', 'G_loss_content', 'SSIM', 'PSNR'):
-            self.writer.add_scalar(f'{scalar_prefix}_{tag}', np.mean(self.metrics[tag]), global_step=epoch_num)
+            self.writer.add_scalar('{scalar_prefix}_{tag}'.format(**locals()), np.mean(self.metrics[tag]), global_step=epoch_num)
         for tag in self.images:
             imgs = self.images[tag]
             if imgs:

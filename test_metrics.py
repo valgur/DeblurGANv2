@@ -1,11 +1,19 @@
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
+
+from builtins import *
+from future import standard_library
+
+standard_library.install_aliases()
 import argparse
 import numpy as np
 import torch
 import cv2
 import yaml
 import os
-from torchvision import models, transforms
+from torchvision import transforms
 from torch.autograd import Variable
 import shutil
 import glob

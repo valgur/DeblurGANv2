@@ -1,11 +1,17 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
 import torch
 from torch import nn
 import torch.nn.parallel
 import torch.optim
 import torch.utils.data
-from torch.nn import Sequential
-from collections import OrderedDict
-import torchvision
 from torch.nn import functional as F
 from models.senet import se_resnext50_32x4d
 
@@ -29,7 +35,7 @@ class UNetSEResNext(nn.Module):
 
     def __init__(self, num_classes=3, num_filters=32,
              pretrained=True, is_deconv=True):
-        super().__init__()
+        super(UNetSEResNext, self).__init__()
         self.num_classes = num_classes
         pretrain = 'imagenet' if pretrained is True else None
         self.encoder = se_resnext50_32x4d(num_classes=1000, pretrained=pretrain)

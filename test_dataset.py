@@ -1,3 +1,12 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
 import os
 import unittest
 from shutil import rmtree
@@ -26,7 +35,7 @@ class AugTest(unittest.TestCase):
         for i in range(5):
             for d in (self.raw, self.gt):
                 img = make_img()
-                cv2.imwrite(os.path.join(d, f'{i}.png'), img)
+                cv2.imwrite(os.path.join(d, '{}.png'.format(i)), img)
 
     def tearDown(self):
         rmtree(self.tmp_dir)

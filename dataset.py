@@ -1,9 +1,17 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
 import os
 from copy import deepcopy
 from functools import partial
 from glob import glob
 from hashlib import sha1
-from typing import Callable, Iterable, Optional, Tuple
 
 import cv2
 import numpy as np
@@ -16,47 +24,47 @@ from tqdm import tqdm
 import aug
 
 
-def subsample(data: Iterable, bounds: Tuple[float, float], hash_fn: Callable, n_buckets=100, salt='', verbose=True):
+def subsample(data, bounds, hash_fn, n_buckets=100, salt='', verbose=True):
     data = list(data)
     buckets = split_into_buckets(data, n_buckets=n_buckets, salt=salt, hash_fn=hash_fn)
 
     lower_bound, upper_bound = [x * n_buckets for x in bounds]
-    msg = f'Subsampling buckets from {lower_bound} to {upper_bound}, total buckets number is {n_buckets}'
+    msg = 'Subsampling buckets from {lower_bound} to {upper_bound}, total buckets number is {n_buckets}'.format(**locals())
     if salt:
-        msg += f'; salt is {salt}'
+        msg += '; salt is {salt}'.format(**locals())
     if verbose:
         logger.info(msg)
     return np.array([sample for bucket, sample in zip(buckets, data) if lower_bound <= bucket < upper_bound])
 
 
-def hash_from_paths(x: Tuple[str, str], salt: str = '') -> str:
+def hash_from_paths(x, salt = ''):
     path_a, path_b = x
     names = ''.join(map(os.path.basename, (path_a, path_b)))
-    return sha1(f'{names}_{salt}'.encode()).hexdigest()
+    return sha1('{names}_{salt}'.format(**locals()).encode()).hexdigest()
 
 
-def split_into_buckets(data: Iterable, n_buckets: int, hash_fn: Callable, salt=''):
+def split_into_buckets(data, n_buckets, hash_fn, salt=''):
     hashes = map(partial(hash_fn, salt=salt), data)
     return np.array([int(x, 16) % n_buckets for x in hashes])
 
 
-def _read_img(x: str):
+def _read_img(x):
     img = cv2.imread(x)
     if img is None:
-        logger.warning(f'Can not read image {x} with OpenCV, switching to scikit-image')
+        logger.warning('Can not read image {x} with OpenCV, switching to scikit-image'.format(**locals()))
         img = imread(x)
     return img
 
 
 class PairedDataset(Dataset):
     def __init__(self,
-                 files_a: Tuple[str],
-                 files_b: Tuple[str],
-                 transform_fn: Callable,
-                 normalize_fn: Callable,
-                 corrupt_fn: Optional[Callable] = None,
-                 preload: bool = True,
-                 preload_size: Optional[int] = 0,
+                 files_a,
+                 files_b,
+                 transform_fn,
+                 normalize_fn,
+                 corrupt_fn = None,
+                 preload = True,
+                 preload_size = 0,
                  verbose=True):
 
         assert len(files_a) == len(files_b)
@@ -68,7 +76,7 @@ class PairedDataset(Dataset):
         self.corrupt_fn = corrupt_fn
         self.transform_fn = transform_fn
         self.normalize_fn = normalize_fn
-        logger.info(f'Dataset has been created with {len(self.data_a)} samples')
+        logger.info('Dataset has been created with {len(self.data_a)} samples'.format(**locals()))
 
         if preload:
             preload_fn = partial(self._bulk_preload, preload_size=preload_size)
@@ -78,21 +86,22 @@ class PairedDataset(Dataset):
                 self.data_a, self.data_b = map(preload_fn, (self.data_a, self.data_b))
             self.preload = True
 
-    def _bulk_preload(self, data: Iterable[str], preload_size: int):
+    def _bulk_preload(self, data, preload_size):
         jobs = [delayed(self._preload)(x, preload_size=preload_size) for x in data]
         jobs = tqdm(jobs, desc='preloading images', disable=not self.verbose)
         return Parallel(n_jobs=cpu_count(), backend='threading')(jobs)
 
     @staticmethod
-    def _preload(x: str, preload_size: int):
+    def _preload(x, preload_size):
         img = _read_img(x)
         if preload_size:
-            h, w, *_ = img.shape
+            _3to2list = list(img.shape)
+            h, w, _, = _3to2list[:2] + [_3to2list[2:]]
             h_scale = preload_size / h
             w_scale = preload_size / w
             scale = max(h_scale, w_scale)
             img = cv2.resize(img, fx=scale, fy=scale, dsize=None)
-            assert min(img.shape[:2]) >= preload_size, f'weird img shape: {img.shape}'
+            assert min(img.shape[:2]) >= preload_size, 'weird img shape: {img.shape}'.format(**locals())
         return img
 
     def _preprocess(self, img, res):
@@ -117,7 +126,7 @@ class PairedDataset(Dataset):
     @staticmethod
     def from_config(config):
         config = deepcopy(config)
-        files_a, files_b = map(lambda x: sorted(glob(config[x], recursive=True)), ('files_a', 'files_b'))
+        files_a, files_b = (sorted(glob(config[x], recursive=True)) for x in ('files_a', 'files_b'))
         transform_fn = aug.get_transforms(size=config['size'], scope=config['scope'], crop=config['crop'])
         normalize_fn = aug.get_normalize()
         corrupt_fn = aug.get_corrupt_function(config['corrupt'])

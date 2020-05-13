@@ -1,8 +1,18 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import torch
 import copy
 
 
-class GANFactory:
+class GANFactory(object):
     factories = {}
 
     def __init__(self):
@@ -52,7 +62,7 @@ class NoGAN(GANTrainer):
     def get_params(self):
         return [torch.nn.Parameter(torch.Tensor(1))]
 
-    class Factory:
+    class Factory(object):
         @staticmethod
         def create(net_d, criterion): return NoGAN(net_d, criterion)
 
@@ -71,7 +81,7 @@ class SingleGAN(GANTrainer):
     def get_params(self):
         return self.net_d.parameters()
 
-    class Factory:
+    class Factory(object):
         @staticmethod
         def create(net_d, criterion): return SingleGAN(net_d, criterion)
 
@@ -93,7 +103,7 @@ class DoubleGAN(GANTrainer):
     def get_params(self):
         return list(self.patch_d.parameters()) + list(self.full_d.parameters())
 
-    class Factory:
+    class Factory(object):
         @staticmethod
         def create(net_d, criterion): return DoubleGAN(net_d, criterion)
 

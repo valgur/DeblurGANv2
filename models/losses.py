@@ -1,3 +1,13 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import torch
 import torch.autograd as autograd
 import torch.nn as nn
@@ -12,7 +22,7 @@ from util.image_pool import ImagePool
 # Functions
 ###############################################################################
 
-class ContentLoss():
+class ContentLoss(object):
     def initialize(self, loss):
         self.criterion = loss
 
@@ -23,7 +33,7 @@ class ContentLoss():
         return self.get_loss(fakeIm, realIm)
 
 
-class PerceptualLoss():
+class PerceptualLoss(object):
 
     def contentFunc(self):
         conv_3_3_layer = 14

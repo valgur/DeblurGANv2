@@ -1,3 +1,12 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
 import math
 
 from torch.optim import lr_scheduler
@@ -25,7 +34,7 @@ class WarmRestart(lr_scheduler.CosineAnnealingLR):
             The index of last epoch. Default: -1.
         """
         self.T_mult = T_mult
-        super().__init__(optimizer, T_max, eta_min, last_epoch)
+        super(WarmRestart, self).__init__(optimizer, T_max, eta_min, last_epoch)
 
     def get_lr(self):
         if self.last_epoch == self.T_max:
@@ -50,7 +59,7 @@ class LinearDecay(lr_scheduler._LRScheduler):
         self.num_epochs = num_epochs
         self.start_epoch = start_epoch
         self.min_lr = min_lr
-        super().__init__(optimizer, last_epoch)
+        super(LinearDecay, self).__init__(optimizer, last_epoch)
 
     def get_lr(self):
         if self.last_epoch < self.start_epoch:

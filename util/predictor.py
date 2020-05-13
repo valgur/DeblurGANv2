@@ -1,9 +1,17 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import os
-from typing import Optional, Union
 
 import numpy as np
 import torch
-import torch.nn as nn
 import yaml
 
 from models.networks import get_generator
@@ -15,7 +23,7 @@ def load_default_config():
         return yaml.safe_load(cfg)
 
 
-def load_model(weights: Union[str, dict] = None, map_location=None, **model_config) -> nn.Module:
+def load_model(weights = None, map_location=None, **model_config):
     full_model_config = load_default_config()['model']
     full_model_config.update(model_config)
     model = get_generator(full_model_config)
@@ -31,8 +39,8 @@ def load_model(weights: Union[str, dict] = None, map_location=None, **model_conf
     return model
 
 
-class Predictor:
-    def __init__(self, model: nn.Module, device='cuda'):
+class Predictor(object):
+    def __init__(self, model, device='cuda'):
         self.device = torch.device(device)
         self.model = model.to(self.device)
 
@@ -42,7 +50,7 @@ class Predictor:
         x = np.expand_dims(x, 0)
         return torch.from_numpy(x)
 
-    def _preprocess(self, x: np.ndarray, mask: Optional[np.ndarray]) -> (torch.Tensor, torch.Tensor, int, int):
+    def _preprocess(self, x, mask):
         x = (x.astype(np.float32) - 127.5) / 127.5
         if mask is None:
             mask = np.ones_like(x, dtype=np.float32)
@@ -64,14 +72,14 @@ class Predictor:
         return self._array_to_batch(x), self._array_to_batch(mask), h, w
 
     @staticmethod
-    def _postprocess(x: torch.Tensor) -> np.ndarray:
+    def _postprocess(x):
         x, = x
         x = x.detach().cpu().float().numpy()
         x = (np.transpose(x, (1, 2, 0)) + 1) / 2.0 * 255.0
         return x.astype('uint8')
 
     @torch.no_grad()
-    def __call__(self, img: np.ndarray, mask: Optional[np.ndarray], ignore_mask=True) -> np.ndarray:
+    def __call__(self, img, mask, ignore_mask=True):
         img, mask, h, w = self._preprocess(img, mask)
         inputs = [img.to(self.device)]
         if not ignore_mask:

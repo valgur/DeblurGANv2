@@ -1,9 +1,16 @@
-from typing import List
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
 
 import albumentations as albu
 
 
-def get_transforms(size: int, scope: str = 'geometric', crop='random'):
+def get_transforms(size, scope = 'geometric', crop='random'):
     augs = {'strong': albu.Compose([albu.HorizontalFlip(),
                                     albu.ShiftScaleRotate(shift_limit=0.0, scale_limit=0.2, rotate_limit=20, p=.4),
                                     albu.ElasticTransform(),
@@ -77,7 +84,7 @@ def _resolve_aug_fn(name):
     return d[name]
 
 
-def get_corrupt_function(config: List[dict]):
+def get_corrupt_function(config):
     augs = []
     for aug_params in config:
         name = aug_params.pop('name')

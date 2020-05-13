@@ -1,12 +1,21 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
 import torch
 import torch.nn as nn
 
-from torchvision.models import resnet50, densenet121, densenet201
+from torchvision.models import densenet121
 
 
 class FPNSegHead(nn.Module):
     def __init__(self, num_in, num_mid, num_out):
-        super().__init__()
+        super(FPNSegHead, self).__init__()
 
         self.block0 = nn.Conv2d(num_in, num_mid, kernel_size=3, padding=1, bias=False)
         self.block1 = nn.Conv2d(num_mid, num_out, kernel_size=3, padding=1, bias=False)
@@ -20,7 +29,7 @@ class FPNSegHead(nn.Module):
 class FPNDense(nn.Module):
 
     def __init__(self, output_ch=3, num_filters=128, num_filters_fpn=256, pretrained=True):
-        super().__init__()
+        super(FPNDense, self).__init__()
 
         # Feature Pyramid Network (FPN) with four feature maps of resolutions
         # 1/4, 1/8, 1/16, 1/32 and `num_filters` filters for all feature maps.
@@ -75,7 +84,7 @@ class FPN(nn.Module):
           pretrained: use ImageNet pre-trained backbone feature extractor
         """
 
-        super().__init__()
+        super(FPN, self).__init__()
 
         self.features = densenet121(pretrained=pretrained).features
 

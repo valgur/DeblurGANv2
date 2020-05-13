@@ -1,3 +1,13 @@
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+from future import standard_library
+
+standard_library.install_aliases()
+from builtins import *
+from builtins import object
 import logging
 from functools import partial
 
@@ -20,8 +30,8 @@ from schedulers import LinearDecay, WarmRestart
 cv2.setNumThreads(0)
 
 
-class Trainer:
-    def __init__(self, config, train: DataLoader, val: DataLoader):
+class Trainer(object):
+    def __init__(self, config, train, val):
         self.config = config
         self.train_dataset = train
         self.val_dataset = val
