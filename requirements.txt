@@ -10,4 +10,5 @@ tqdm
 glog
 tensorboardx
 fire
+pyyaml
 # this file is not ready yet

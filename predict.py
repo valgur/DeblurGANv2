@@ -7,14 +7,17 @@ import numpy as np
 from fire import Fire
 from tqdm import tqdm
 
-from util.predictor import Predictor
+from hubconf import DeblurGANv2
+from util.predictor import Predictor, load_model
 
 
 def main(img_pattern: str,
          mask_pattern: Optional[str] = None,
+         pretrained_model=None,
          weights_path='best_fpn.h5',
          out_dir='submit/',
-         side_by_side: bool = False):
+         side_by_side: bool = False,
+         device='cuda'):
     def sorted_glob(pattern):
         return sorted(glob(pattern))
 
@@ -22,7 +25,11 @@ def main(img_pattern: str,
     masks = sorted_glob(mask_pattern) if mask_pattern is not None else [None for _ in imgs]
     pairs = zip(imgs, masks)
     names = sorted([os.path.basename(x) for x in glob(img_pattern)])
-    predictor = Predictor(weights_path=weights_path)
+    if pretrained_model:
+        model = DeblurGANv2(pretrained_model, map_location=device)
+    else:
+        model = load_model(weights_path, map_location=device)
+    predictor = Predictor(model, device=device)
 
     os.makedirs(out_dir, exist_ok=True)
     for name, pair in tqdm(zip(names, pairs), total=len(names)):

@@ -1,30 +1,40 @@
 import os
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
 import torch
+import torch.nn as nn
+import yaml
 
 from models.networks import get_generator
 
 
 def load_default_config():
-    import yaml
     script_dir = os.path.dirname(os.path.abspath(__file__))
     with open(os.path.join(script_dir, '../config/config.yaml')) as cfg:
         return yaml.safe_load(cfg)
 
 
+def load_model(weights: Union[str, dict] = None, map_location=None, **model_config) -> nn.Module:
+    full_model_config = load_default_config()['model']
+    full_model_config.update(model_config)
+    model = get_generator(full_model_config)
+    if weights:
+        if not isinstance(weights, dict):
+            weights = torch.load(weights, map_location=map_location)
+        model.load_state_dict(weights['model'])
+    # Remove DataParallel for CPU inference support
+    model = model.module
+    # GAN inference should be in train mode to use actual stats in norm layers,
+    # it's not a bug
+    model.train(True)
+    return model
+
+
 class Predictor:
-    def __init__(self, weights_path: str, model_config: Optional[dict] = None, device='cuda'):
+    def __init__(self, model: nn.Module, device='cuda'):
         self.device = torch.device(device)
-        model = get_generator(model_config or load_default_config()['model'])
-        model.load_state_dict(torch.load(weights_path, map_location=self.device)['model'])
-        # Remove DataParallel for CPU inference support
-        model = model.module
         self.model = model.to(self.device)
-        # GAN inference should be in train mode to use actual stats in norm layers,
-        # it's not a bug
-        self.model.train(True)
 
     @staticmethod
     def _array_to_batch(x):
