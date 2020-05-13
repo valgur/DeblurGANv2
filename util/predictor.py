@@ -4,7 +4,6 @@ import numpy as np
 import torch
 import yaml
 
-from aug import get_normalize
 from models.networks import get_generator
 
 
@@ -15,10 +14,9 @@ class Predictor:
         model = get_generator(model_name or config['model'])
         model.load_state_dict(torch.load(weights_path)['model'])
         self.model = model.cuda()
-        self.model.train(True)
         # GAN inference should be in train mode to use actual stats in norm layers,
         # it's not a bug
-        self.normalize_fn = get_normalize()
+        self.model.train(True)
 
     @staticmethod
     def _array_to_batch(x):
@@ -27,7 +25,7 @@ class Predictor:
         return torch.from_numpy(x)
 
     def _preprocess(self, x: np.ndarray, mask: Optional[np.ndarray]):
-        x, _ = self.normalize_fn(x, x)
+        x = (x.astype(np.float32) - 127.5) / 127.5
         if mask is None:
             mask = np.ones_like(x, dtype=np.float32)
         else:
