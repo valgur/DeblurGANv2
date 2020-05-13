@@ -51,6 +51,7 @@ model:
   learn_residual: True
   norm_layer: instance
   dropout: True
+  pretrained: True
 
 num_epochs: 200
 train_batches_per_epoch: 1000

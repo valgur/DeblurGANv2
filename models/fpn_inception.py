@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from pretrainedmodels import inceptionresnetv2
-from torchsummary import summary
 import torch.nn.functional as F
 
 class FPNHead(nn.Module):
@@ -31,12 +30,12 @@ class ConvBlock(nn.Module):
 
 class FPNInception(nn.Module):
 
-    def __init__(self, norm_layer, output_ch=3, num_filters=128, num_filters_fpn=256):
+    def __init__(self, norm_layer, output_ch=3, num_filters=128, num_filters_fpn=256, pretrained=True):
         super().__init__()
 
         # Feature Pyramid Network (FPN) with four feature maps of resolutions
         # 1/4, 1/8, 1/16, 1/32 and `num_filters` filters for all feature maps.
-        self.fpn = FPN(num_filters=num_filters_fpn, norm_layer=norm_layer)
+        self.fpn = FPN(num_filters=num_filters_fpn, norm_layer=norm_layer, pretrained=pretrained)
 
         # The segmentation heads on top of the FPN
 
@@ -83,7 +82,7 @@ class FPNInception(nn.Module):
 
 class FPN(nn.Module):
 
-    def __init__(self, norm_layer, num_filters=256):
+    def __init__(self, norm_layer, num_filters=256, pretrained=True):
         """Creates an `FPN` instance for feature extraction.
         Args:
           num_filters: the number of filters in each output pyramid level
@@ -91,7 +90,8 @@ class FPN(nn.Module):
         """
 
         super().__init__()
-        self.inception = inceptionresnetv2(num_classes=1000, pretrained='imagenet')
+        self.inception = inceptionresnetv2(num_classes=1000,
+                                           pretrained='imagenet' if pretrained else None)
 
         self.enc0 = self.inception.conv2d_1a
         self.enc1 = nn.Sequential(

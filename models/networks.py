@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.nn import init
 import functools
-from torch.autograd import Variable
 import numpy as np
 from models.fpn_mobilenet import FPNMobileNet
 from models.fpn_inception import FPNInception
@@ -276,13 +274,16 @@ def get_generator(model_config):
                                   n_blocks=model_config['blocks'],
                                   learn_residual=model_config['learn_residual'])
     elif generator_name == 'fpn_mobilenet':
-        model_g = FPNMobileNet(norm_layer=get_norm_layer(norm_type=model_config['norm_layer']))
+        model_g = FPNMobileNet(norm_layer=get_norm_layer(norm_type=model_config['norm_layer']),
+                               pretrained=model_config['pretrained'])
     elif generator_name == 'fpn_inception':
-        model_g = FPNInception(norm_layer=get_norm_layer(norm_type=model_config['norm_layer']))
+        model_g = FPNInception(norm_layer=get_norm_layer(norm_type=model_config['norm_layer']),
+                               pretrained=model_config['pretrained'])
     elif generator_name == 'fpn_inception_simple':
-        model_g = FPNInceptionSimple(norm_layer=get_norm_layer(norm_type=model_config['norm_layer']))
+        model_g = FPNInceptionSimple(norm_layer=get_norm_layer(norm_type=model_config['norm_layer']),
+                                     pretrained=model_config['pretrained'])
     elif generator_name == 'fpn_dense':
-        model_g = FPNDense()
+        model_g = FPNDense(pretrained=model_config['pretrained'])
     elif generator_name == 'unet_seresnext':
         model_g = UNetSEResNext(norm_layer=get_norm_layer(norm_type=model_config['norm_layer']),
                                 pretrained=model_config['pretrained'])
